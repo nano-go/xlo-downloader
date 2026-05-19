@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 type BottomSheetProps = {
   children: ReactNode;
@@ -69,19 +65,22 @@ export function BottomSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end overflow-hidden overscroll-none bg-slate-950/35">
+    <div
+      role="dialog"
+      className="fixed inset-0 z-50 flex items-end overflow-hidden overscroll-none bg-slate-950/35"
+    >
       <button
         aria-label={`Close ${title}`}
-        className="absolute inset-0 h-full w-full cursor-default touch-none"
+        className="absolute inset-0 w-full h-full cursor-default touch-none"
         ref={backdropRef}
         type="button"
         onClick={onClose}
       />
 
       <section className="relative max-h-[calc(100vh-24px)] w-full overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-200 bg-white px-4 pb-4 pt-3 shadow-2xl">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-300" />
+        <div className="w-10 h-1 mx-auto mb-3 rounded-full bg-slate-300" />
 
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between mb-4 gap-3">
           <div>
             <h2 className="text-base font-semibold leading-6 text-slate-950">
               {title}
@@ -91,7 +90,7 @@ export function BottomSheet({
             )}
           </div>
           <button
-            className="min-h-11 rounded-xl px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="px-3 text-sm font-medium min-h-11 rounded-xl text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
             type="button"
             onClick={onClose}
           >

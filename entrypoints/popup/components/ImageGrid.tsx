@@ -1,4 +1,6 @@
-import type { PageImage } from "../../../utils/page-images";
+import { LuCheck } from "react-icons/lu";
+import { useMemo } from "react";
+import type { PageImage } from "@/utils/page-images";
 
 type ImageGridProps = {
   images: PageImage[];
@@ -11,7 +13,7 @@ export function ImageGrid({
   selectedImages,
   onImageToggle,
 }: ImageGridProps) {
-  const columns = createMasonryColumns(images, 2);
+  const columns = useMemo(() => createMasonryColumns(images, 2), [images]);
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -19,9 +21,9 @@ export function ImageGrid({
         <div className="flex flex-col gap-3" key={index}>
           {column.map((image) => (
             <ImageCard
+              key={image.src}
               image={image}
               isSelected={selectedImages.has(image.src)}
-              key={image.src}
               onToggle={onImageToggle}
             />
           ))}
@@ -80,15 +82,16 @@ function ImageCard({
           <div className="relative w-full h-full">
             <img
               alt=""
+              aria-label={image.name}
               className="object-contain w-full h-full"
               loading="lazy"
-              referrerPolicy="no-referrer"
+              referrerPolicy="origin"
               src={image.src}
             />
             {isSelected && (
               <div className="absolute inset-0 flex items-start justify-end p-2 bg-slate-950/20">
                 <span className="flex items-center justify-center text-sm font-semibold text-white rounded-full h-7 w-7 bg-slate-950 shadow-sm">
-                  ✓
+                  <LuCheck aria-hidden="true" className="w-4 h-4 text-white" />
                 </span>
               </div>
             )}
