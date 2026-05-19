@@ -4,6 +4,11 @@ import {
   getNameWithoutExtFromUrl,
   type PageImage,
 } from "@/utils/page-images";
+import {
+  hasValidImageSize,
+  isPageImageTooSmall,
+  resolveImageSize,
+} from "@/utils/page-image-size";
 
 const GET_PAGE_IMAGES = "GET_PAGE_IMAGES";
 
@@ -40,29 +45,43 @@ async function collectImages(
   loadedPageImages: Map<string, PageImage>,
 ): Promise<PageImage[]> {
   const images: PageImage[] = [];
-  for (let img of document.querySelectorAll("img")) {
+  const seenSrcs = new Set<string>();
+
+  const imageElements = document.querySelectorAll("img");
+
+  const imagePromises = Array.from(imageElements).map(async (img) => {
     const src = imageSrc(img);
     if (src.length === 0) {
-      continue;
+      return;
     }
+    if (seenSrcs.has(src)) {
+      return;
+    }
+    seenSrcs.add(src);
 
     const loadedImage = loadedPageImages.get(src);
     if (loadedImage) {
       images.push(loadedImage);
-      continue;
+      return;
     }
 
-    if (!isVisible(img) || isTooSmall(img)) {
-      continue;
+    if (!isVisible(img)) {
+      return;
     }
 
     const pageImage = await convertToPageImage(img, src);
-    if (pageImage === undefined) {
-      continue;
+    if (isPageImageTooSmall(pageImage)) {
+      return;
     }
+
     images.push(pageImage);
-    loadedPageImages.set(src, pageImage);
-  }
+    if (hasValidImageSize(pageImage)) {
+      loadedPageImages.set(src, pageImage);
+    }
+  });
+
+  await Promise.all(imagePromises);
+
   return images;
 }
 
@@ -76,24 +95,18 @@ function isVisible(img: Element): boolean {
   );
 }
 
-function isTooSmall(img: HTMLImageElement): boolean {
-  if (!img.complete) {
-    return false;
-  }
-  return img.naturalWidth * img.naturalHeight < 50 * 50;
-}
-
 async function convertToPageImage(
   img: HTMLImageElement,
   src: string,
 ): Promise<PageImage> {
+  const size = await resolveImageSize(img, src);
   return {
-    complete: img.complete,
+    complete: size.complete,
     src,
     name: getNameWithoutExtFromUrl(src) ?? "image",
     type: await getImageType(src),
-    width: img.naturalWidth,
-    height: img.naturalHeight,
+    width: size.width,
+    height: size.height,
   };
 }
 
