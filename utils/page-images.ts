@@ -1,11 +1,4 @@
-export type ImageType =
-  | "png"
-  | "jpg"
-  | "jpeg"
-  | "gif"
-  | "webp"
-  | "svg"
-  | "unknown";
+export type ImageType = "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg";
 const VALID_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "svg"];
 
 export type PageImage = {
@@ -38,7 +31,7 @@ export async function getImageType(src: string): Promise<ImageType> {
   if (!type) {
     type = await getImageTypeFromHeader(src);
   }
-  return type || "unknown";
+  return type || "jpg";
 }
 
 export function getImageTypeFromUrl(url: string): ImageType | undefined {

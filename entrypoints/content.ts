@@ -22,19 +22,20 @@ export default defineContentScript({
         return false;
       }
 
-      collectImages(loadedPageImages)
-        .then((images) =>
+      (async function () {
+        try {
+          const images = await collectImages(loadedPageImages);
           sendResponse({
             ok: true,
             images,
-          }),
-        )
-        .catch((error) => {
+          });
+        } catch (error) {
           sendResponse({
             ok: false,
             error: formatError(error, "Unable to read page images"),
           });
-        });
+        }
+      })();
 
       return true;
     });
@@ -51,10 +52,7 @@ async function collectImages(
 
   const imagePromises = Array.from(imageElements).map(async (img) => {
     const src = imageSrc(img);
-    if (src.length === 0) {
-      return;
-    }
-    if (seenSrcs.has(src)) {
+    if (src.length === 0 || seenSrcs.has(src)) {
       return;
     }
     seenSrcs.add(src);
