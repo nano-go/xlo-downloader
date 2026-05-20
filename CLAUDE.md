@@ -1,21 +1,55 @@
-# Introductio
+See [README.md](README.md) for project introduction.
 
-This is a CHROME extension that allows you to download images from the web. Now It is not released yet.
+# Architecture
 
-# Technologies Used
+```
+entrypoints/
+├── background.ts       # Service worker — handles download requests via offscreen document
+├── content.ts          # Content script — injected into pages to extract images
+├── offscreen.html      # Offscreen document — creates blob URLs for ZIP downloads
+└── popup/              # Extension popup UI (React)
+    ├── App.tsx
+    ├── components/     # UI components
+    └── hooks/          # React hooks (data fetching, filters, selection, async lock)
 
-1. Use tailwindcss to style the extension.
-2. Use React to build the UI of the extension.
-3. Use `react-icons/lu` to use icons in the extension.
+utils/                  # Shared utilities (error handling, page image types, etc.)
+```
 
-# Scripts
+# Tech Stack
 
-- `bun run build`: Build the extension for production.
-- `bun run comile`: Compile the extension for development.
-- `bun run zip`: Zip the extension for distribution.
-- `bun run postinstall`: Post install script to copy the extension to the Chrome extensions folder.
-- `bun test`: Run tests for the extension.
+- **[WXT](https://wxt.dev)** — Extension framework
+- **React 19** — UI
+- **Tailwind CSS 4** — Styling
+- **TypeScript** — Language
+- **Vite** — Bundler
+- **[client-zip](https://www.npmjs.com/package/client-zip)** — ZIP generation in browser
+- **[react-icons](https://react-icons.github.io/react-icons/)** (Lucide) — Icons
 
-`bun test` and `bun run build` can help you to test and build the extension respectively. You can also use `bun run comile` to compile the extension for development. After building the extension.
+# Permissions
 
-don't use `bun run dev` to run the extension, because it will not work.
+- `activeTab` — Access the current page's DOM for image extraction
+- `scripting` — Inject content scripts
+- `downloads` — Trigger file downloads
+- `offscreen` — Create an offscreen document for blob URL handling
+- `host_permissions` (`<all_urls>`) — Fetch images from any origin
+
+# Development
+
+```bash
+# Install dependencies
+bun install
+
+# Build for production
+bun run build
+
+# Compile (type-check only)
+bun run compile
+
+# Run tests
+bun test
+
+# Package for distribution
+bun run zip
+```
+
+> Don't use `bun run dev` — it won't work with the current setup.
