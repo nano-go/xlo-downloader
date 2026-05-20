@@ -1,7 +1,7 @@
 import type { PageImage } from "./page-images";
 
-const WAIT_FOR_ELEMENT_TIMEOUT_MS = 800;
-const PROBE_IMAGE_TIMEOUT_MS = 1000;
+const WAIT_FOR_ELEMENT_TIMEOUT_MS = 400;
+const PROBE_IMAGE_TIMEOUT_MS = 1400;
 
 export type ResolvedImageSize = {
   complete: boolean;
