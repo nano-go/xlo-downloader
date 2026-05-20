@@ -1,8 +1,7 @@
 {
   "name": "xlo-downloader",
-  "description": "manifest.json description",
-  "private": true,
-  "version": "0.0.0",
+  "description": "A Chrome extension for finding, filtering, copying, and downloading images from web pages.",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
