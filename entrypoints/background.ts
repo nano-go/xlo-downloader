@@ -26,11 +26,11 @@ export default defineBackground(() => {
 /**
  * Downloads the given images as a zip file with the specified name. This function ensures that an offscreen document is available to create Blob URLs for the zip file, and it handles retries if the offscreen document is not yet ready.
  *
- * @param imagee - An array of PageImage objects representing the images to be included in the zip file.
+ * @param images - An array of PageImage objects representing the images to be included in the zip file.
  * @param zipName - The desired name for the downloaded zip file (without the .zip extension).
  */
-async function downloadAndZip(imagee: PageImage[], zipName: string) {
-  const url = await createZipObjectUrl(imagee);
+async function downloadAndZip(images: PageImage[], zipName: string) {
+  const url = await createZipObjectUrl(images);
   await browser.downloads.download({
     url,
     filename: `${zipName}.zip`,
@@ -61,21 +61,23 @@ async function ensureOffscreenDocument() {
     return;
   }
 
-  creatingOffscreenDocument ??= browser.offscreen
-    .createDocument({
-      url: OFFSCREEN_DOCUMENT_PATH,
-      reasons: ["BLOBS"],
-      justification: "Create Blob URLs for generated zip downloads",
-    })
-    .catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes("Only a single offscreen document")) {
-        throw error;
-      }
-    })
-    .then(() => {
-      creatingOffscreenDocument = undefined;
-    });
+  if (creatingOffscreenDocument === undefined) {
+    creatingOffscreenDocument = browser.offscreen
+      .createDocument({
+        url: OFFSCREEN_DOCUMENT_PATH,
+        reasons: ["BLOBS"],
+        justification: "Create Blob URLs for generated zip downloads",
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!message.includes("Only a single offscreen document")) {
+          throw error;
+        }
+      })
+      .finally(() => {
+        creatingOffscreenDocument = undefined;
+      });
+  }
 
   await creatingOffscreenDocument;
 }
