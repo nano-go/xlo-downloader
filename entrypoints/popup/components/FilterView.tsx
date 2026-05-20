@@ -3,22 +3,23 @@ import {
   ImageFilters,
   ImageTypeFilter,
 } from "../hooks/useImageFilters";
+import { ActionButton } from "./ActionButton";
 import { BottomSheet } from "./BottomSheet";
 import { RangeSlider } from "./RangeSlider";
 
-type FilterViewProps = {
+export interface FilterViewProps {
+  isOpen: boolean;
   filters: ImageFilters;
   heightBounds: DimensionRange;
-  isOpen: boolean;
+  widthBounds: DimensionRange;
   resultCount: number;
   selectedCount: number;
   totalCount: number;
-  widthBounds: DimensionRange;
   onClose: () => void;
   onFilterChange: (filters: ImageFilters) => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
-};
+}
 
 const typeOptions: { label: string; value: ImageTypeFilter }[] = [
   { label: "All", value: "all" },
@@ -27,13 +28,13 @@ const typeOptions: { label: string; value: ImageTypeFilter }[] = [
 ];
 
 export function FilterView({
+  isOpen,
   filters,
   heightBounds,
-  isOpen,
+  widthBounds,
   resultCount,
   selectedCount,
   totalCount,
-  widthBounds,
   onClose,
   onFilterChange,
   onSelectAll,
@@ -88,22 +89,16 @@ export function FilterView({
         />
 
         <div className="pt-1 grid grid-cols-2 gap-3">
-          <button
-            className="px-4 text-sm font-semibold text-white min-h-12 rounded-xl bg-slate-950 shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-not-allowed disabled:bg-slate-300"
+          <ActionButton
             disabled={resultCount === 0}
-            type="button"
+            label="Select All"
             onClick={onSelectAll}
-          >
-            Select All
-          </button>
-          <button
-            className="px-4 text-sm font-semibold bg-white border min-h-12 rounded-xl border-slate-200 text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:text-slate-300"
+          />
+          <ActionButton
             disabled={selectedCount === 0}
-            type="button"
+            label="Clear"
             onClick={onClearSelection}
-          >
-            Clear
-          </button>
+          />
         </div>
       </div>
     </BottomSheet>
