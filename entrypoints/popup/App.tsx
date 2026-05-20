@@ -1,6 +1,7 @@
 import "./App.css";
 import "@/assets/tailwind.css";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ActionButton } from "./components/ActionButton";
 import { FilterView } from "./components/FilterView";
 import { HideOnScrollHeader } from "./components/HideOnScrollHeader";
 import { ImageGrid } from "./components/ImageGrid";
@@ -200,30 +201,6 @@ function App() {
         onSelectAll={() => selectAll()}
       />
     </main>
-  );
-}
-
-function ActionButton({
-  disabled,
-  icon,
-  label,
-  onClick,
-}: {
-  disabled: boolean;
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className="flex items-center justify-center px-3 text-sm font-semibold text-white min-h-11 gap-2 rounded-xl bg-slate-950 transition active:scale-95 active:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-      disabled={disabled}
-      type="button"
-      onClick={onClick}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
   );
 }
 
