@@ -3,11 +3,11 @@ import { PageImage } from "@/utils/page-images";
 
 export type UseSelectedImagesReturn = {
   selectedImages: Set<string>;
-  isAllFilteredSelected: boolean;
-  toggleAll: (images?: PageImage[]) => void;
+  isAllSelected: boolean;
+  toggleAll: () => void;
   toggle: (src: string) => void;
-  clearSelection: () => void;
-  selectAll: (images?: PageImage[]) => void;
+  clearAll: () => void;
+  selectAll: () => void;
 };
 
 export function useSelectedImages(
@@ -15,19 +15,26 @@ export function useSelectedImages(
 ): UseSelectedImagesReturn {
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 
-  const isAllFilteredSelected = useMemo(
-    () => areImagesSelected(selectedImages, filteredImages),
+  function selectImages(images: PageImage[]) {
+    setSelectedImages(
+      new Set([...selectedImages, ...images.map((image) => image.src)]),
+    );
+  }
+
+  const isAllSelected = useMemo(
+    () =>
+      filteredImages.length > 0 &&
+      filteredImages.length <= selectedImages.size &&
+      filteredImages.every((image) => selectedImages.has(image.src)),
     [filteredImages, selectedImages],
   );
 
-  const toggleAll = (images?: PageImage[]) => {
-    if (!images) {
-      images = filteredImages;
+  const toggleAll = () => {
+    if (isAllSelected) {
+      setSelectedImages(new Set());
+    } else {
+      selectImages(filteredImages);
     }
-    if (areImagesSelected(selectedImages, images)) {
-      return setSelectedImages(deselectImages(selectedImages, images!));
-    }
-    setSelectedImages(selectImages(images!));
   };
 
   const toggle = (src: string) => {
@@ -42,41 +49,15 @@ export function useSelectedImages(
     });
   };
 
-  const clearSelection = () => {
-    setSelectedImages(new Set());
-  };
-
-  const selectAll = (images?: PageImage[]) => {
-    if (!images) {
-      return setSelectedImages(selectImages(filteredImages));
-    }
-    setSelectedImages(selectImages(images));
-  };
+  const clearSelection = () => setSelectedImages(new Set());
+  const selectAll = () => selectImages(filteredImages);
 
   return {
     selectedImages,
-    isAllFilteredSelected,
+    isAllSelected,
     toggleAll,
     toggle,
-    clearSelection,
+    clearAll: clearSelection,
     selectAll,
   };
-}
-
-export function selectImages(images: PageImage[]) {
-  return new Set(images.map((image) => image.src));
-}
-
-export function deselectImages(selected: Set<string>, images: PageImage[]) {
-  const nextSelected = new Set(selected);
-
-  for (const image of images) {
-    nextSelected.delete(image.src);
-  }
-
-  return nextSelected;
-}
-
-export function areImagesSelected(selected: Set<string>, images: PageImage[]) {
-  return images.length > 0 && images.every((image) => selected.has(image.src));
 }

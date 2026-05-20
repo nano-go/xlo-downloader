@@ -10,7 +10,7 @@ import type { LoadState } from "../hooks/usePageImages";
 type PopupHeaderProps = {
   canSelectFilteredImages: boolean;
   imageCount: number;
-  isAllFilteredSelected: boolean;
+  isAllSelected: boolean;
   selectedCount: number;
   state: LoadState;
   onOpenControls: () => void;
@@ -21,7 +21,7 @@ type PopupHeaderProps = {
 export function PopupHeader({
   canSelectFilteredImages,
   imageCount,
-  isAllFilteredSelected,
+  isAllSelected,
   selectedCount,
   state,
   onOpenControls,
@@ -48,19 +48,19 @@ export function PopupHeader({
         </HeaderIconButton>
         <HeaderIconButton
           aria-label={
-            isAllFilteredSelected
+            isAllSelected
               ? "Deselect filtered images"
               : "Select all filtered images"
           }
           disabled={!canSelectFilteredImages}
           title={
-            isAllFilteredSelected
+            isAllSelected
               ? "Deselect filtered images"
               : "Select all filtered images"
           }
           onClick={onToggleSelectFilteredImages}
         >
-          {isAllFilteredSelected ? (
+          {isAllSelected ? (
             <LuSquareMinus aria-hidden="true" className="w-5 h-5" />
           ) : (
             <LuSquareCheckBig aria-hidden="true" className="w-5 h-5" />

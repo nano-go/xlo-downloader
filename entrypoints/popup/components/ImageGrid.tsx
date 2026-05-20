@@ -5,13 +5,13 @@ import type { PageImage } from "@/utils/page-images";
 type ImageGridProps = {
   images: PageImage[];
   selectedImages: Set<string>;
-  onImageToggle: (image: PageImage) => void;
+  onImageClick?: (image: PageImage) => void;
 };
 
 export function ImageGrid({
   images,
   selectedImages,
-  onImageToggle,
+  onImageClick,
 }: ImageGridProps) {
   const columns = useMemo(() => createMasonryColumns(images, 2), [images]);
 
@@ -24,7 +24,7 @@ export function ImageGrid({
               key={image.src}
               image={image}
               isSelected={selectedImages.has(image.src)}
-              onToggle={onImageToggle}
+              onImageClick={onImageClick}
             />
           ))}
         </div>
@@ -56,11 +56,11 @@ export function createMasonryColumns(images: PageImage[], columnCount: number) {
 function ImageCard({
   image,
   isSelected,
-  onToggle,
+  onImageClick,
 }: {
   image: PageImage;
   isSelected: boolean;
-  onToggle: (image: PageImage) => void;
+  onImageClick?: (image: PageImage) => void;
 }) {
   const aspectRatio = getAspectRatio(image);
 
@@ -76,7 +76,7 @@ function ImageCard({
         aria-pressed={isSelected}
         className="block w-full text-left"
         type="button"
-        onClick={() => onToggle(image)}
+        onClick={onImageClick ? () => onImageClick(image) : undefined}
       >
         <div className="bg-slate-100" style={{ aspectRatio }}>
           <div className="relative w-full h-full">

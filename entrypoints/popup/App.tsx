@@ -74,9 +74,9 @@ function App() {
   const {
     selectedImages,
     toggleAll,
-    isAllFilteredSelected,
+    isAllSelected,
     toggle,
-    clearSelection,
+    clearAll,
     selectAll,
   } = useSelectedImages(filteredImages);
 
@@ -84,9 +84,8 @@ function App() {
   const imageListRef = useRef<HTMLElement | null>(null);
   const topBarRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    clearSelection();
-  }, [loadState]);
+  // Clear selection when images are reloaded to avoid keeping selections of images that might no longer be present.
+  useEffect(() => clearAll(), [loadState]);
 
   useEffect(() => {
     if (!topBarRef.current) {
@@ -126,7 +125,7 @@ function App() {
           <PopupHeader
             canSelectFilteredImages={filteredImages.length > 0}
             imageCount={filteredImages.length}
-            isAllFilteredSelected={isAllFilteredSelected}
+            isAllSelected={isAllSelected}
             selectedCount={selectedImages.size}
             state={loadState}
             onOpenControls={() => setIsPopupOpen(true)}
@@ -183,7 +182,7 @@ function App() {
           <ImageGrid
             images={filteredImages}
             selectedImages={selectedImages}
-            onImageToggle={(image) => toggle(image.src)}
+            onImageClick={(image) => toggle(image.src)}
           />
         )}
       </section>
@@ -195,7 +194,7 @@ function App() {
         selectedCount={selectedImages.size}
         totalCount={loadState.images.length}
         widthBounds={widthBounds}
-        onClearSelection={() => clearSelection()}
+        onClearSelection={() => clearAll()}
         onClose={() => setIsPopupOpen(false)}
         onFilterChange={setFilters}
         onSelectAll={() => selectAll()}
