@@ -11,7 +11,7 @@ type HideOnScrollHeaderProps = {
   scrollContainerRef: RefObject<HTMLElement | null>;
 };
 
-const SCROLL_DIRECTION_THRESHOLD = 8;
+const SCROLL_DIRECTION_THRESHOLD = 12;
 const BOTTOM_BOUNCE_THRESHOLD = 16;
 
 type HeaderVisibilityInput = {

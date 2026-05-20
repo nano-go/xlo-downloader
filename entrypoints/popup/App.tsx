@@ -92,16 +92,7 @@ function App() {
     if (!topBarRef.current) {
       return;
     }
-
-    const updateTopBarHeight = () => {
-      setTopBarHeight(topBarRef.current?.offsetHeight ?? 0);
-    };
-    updateTopBarHeight();
-
-    const resizeObserver = new ResizeObserver(updateTopBarHeight);
-    resizeObserver.observe(topBarRef.current);
-
-    return () => resizeObserver.disconnect();
+    setTopBarHeight(topBarRef.current?.offsetHeight ?? 64);
   }, []);
 
   const [isDownloading, runDownloadSelectedImages] = useAsyncLock(async () => {
