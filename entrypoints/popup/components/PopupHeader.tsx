@@ -1,5 +1,6 @@
 import {
   LuFilter,
+  LuLoaderCircle,
   LuRefreshCw,
   LuSquareCheckBig,
   LuSquareMinus,
@@ -31,7 +32,15 @@ export function PopupHeader({
   return (
     <header className="flex items-center justify-between px-4 py-3 bg-white border-b gap-3 border-slate-200">
       <div>
-        <h1 className="text-base font-semibold leading-5">XLO Downloader</h1>
+        <h1 className="text-base font-semibold leading-5 flex items-center gap-1.5">
+          XLO Downloader
+          {state.status === "success" &&
+            (state.complete ? (
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
+            ) : (
+              <LuLoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin text-slate-400" />
+            ))}
+        </h1>
         <p className="mt-0.5 text-xs text-slate-500">
           {state.status === "loading"
             ? "Loading..."

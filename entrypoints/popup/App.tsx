@@ -86,7 +86,7 @@ function App() {
   const topBarRef = useRef<HTMLDivElement | null>(null);
 
   // Clear selection when images are reloaded to avoid keeping selections of images that might no longer be present.
-  useEffect(() => clearAll(), [loadState]);
+  useEffect(() => clearAll(), [loadState.status]);
 
   useEffect(() => {
     if (!topBarRef.current) {

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { type PageImage } from "../../../utils/page-images";
+import { type PageImage } from "@/utils/page-images";
 import { formatError } from "@/utils/errors";
-
-const GET_PAGE_IMAGES = "GET_PAGE_IMAGES";
+import { useAsyncLock } from "./useAsyncLock";
+import {
+  REQ_TYPE_GET_PAGE_IMAGES,
+  PageImagesResponse,
+  CONTENT_POPUP_PORT_NAME,
+  isPostLoadedImageMessage,
+} from "@/entrypoints/content";
 
 export type LoadState =
   | {
@@ -10,29 +15,29 @@ export type LoadState =
       images: PageImage[];
       tabId?: number;
       error?: undefined;
+      complete?: boolean;
     }
   | {
       status: "success";
       images: PageImage[];
       tabId: number;
       error?: undefined;
+      complete: boolean;
     }
   | {
       status: "empty";
       images: PageImage[];
       tabId: number;
       error?: undefined;
+      complete?: boolean;
     }
   | {
       status: "error";
       images: PageImage[];
       tabId?: number;
       error: string;
+      complete?: boolean;
     };
-
-type PageImagesResponse =
-  | { ok: true; images: PageImage[] }
-  | { ok: false; error: string };
 
 export function usePageImages() {
   const [loadState, setLoadState] = useState<LoadState>({
@@ -40,7 +45,64 @@ export function usePageImages() {
     images: [],
   });
 
-  const loadImages = useCallback(async () => {
+  const addPageImages = useCallback(
+    (newImages: PageImage[]) => {
+      setLoadState((prevState) => {
+        if (prevState.status !== "success") {
+          return prevState;
+        }
+
+        const existingImages = new Set(prevState.images.map((img) => img.src));
+        const uniqueNewImages = newImages.filter(
+          (img) => !existingImages.has(img.src),
+        );
+
+        if (uniqueNewImages.length === 0) {
+          return prevState;
+        }
+
+        return {
+          ...prevState,
+          images: [...prevState.images, ...uniqueNewImages],
+        };
+      });
+    },
+    [setLoadState],
+  );
+
+  const handleConnect = useCallback(
+    (port: Browser.runtime.Port) => {
+      if (port.name !== CONTENT_POPUP_PORT_NAME) {
+        return;
+      }
+
+      // Listen for new images from content script
+      port.onMessage.addListener((message) => {
+        if (!isPostLoadedImageMessage(message)) {
+          return;
+        }
+        addPageImages([message.img]);
+      });
+
+      // Listen for port disconnection to know when to stop listening for new images
+      port.onDisconnect.addListener(() => {
+        setLoadState((prevState) => {
+          if (prevState.status !== "success") {
+            return prevState;
+          }
+          return {
+            ...prevState,
+            complete: true,
+          };
+        });
+
+        browser.runtime.onConnect.removeListener(handleConnect);
+      });
+    },
+    [addPageImages, setLoadState],
+  );
+
+  const [_, loadImages] = useAsyncLock(async () => {
     const [tab] = await browser.tabs.query({
       active: true,
       currentWindow: true,
@@ -81,10 +143,19 @@ export function usePageImages() {
     setLoadState({
       status: "success",
       images: response.images,
+      complete: response.complete,
       tabId,
     });
-  }, []);
 
+    if (response.complete) {
+      return;
+    }
+
+    // Listen for new images from content script
+    browser.runtime.onConnect.addListener(handleConnect);
+  }, [setLoadState, handleConnect]);
+
+  // Initial load of page images
   useEffect(() => {
     void loadImages();
   }, [loadImages]);
@@ -95,7 +166,7 @@ export function usePageImages() {
 async function getPageImages(tabId: number): Promise<PageImagesResponse> {
   try {
     const response = (await browser.tabs.sendMessage(tabId, {
-      type: GET_PAGE_IMAGES,
+      type: REQ_TYPE_GET_PAGE_IMAGES,
     })) as PageImagesResponse | undefined;
 
     return (

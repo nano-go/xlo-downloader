@@ -120,8 +120,5 @@ function reconcileRange(
     return bounds;
   }
 
-  return [
-    Math.min(Math.max(range[0], minBound), maxBound),
-    Math.max(Math.min(range[1], maxBound), minBound),
-  ];
+  return bounds;
 }

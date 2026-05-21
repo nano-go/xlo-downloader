@@ -1,123 +1,101 @@
 import { formatError } from "@/utils/errors";
-import {
-  getImageType,
-  getNameWithoutExtFromUrl,
-  type PageImage,
-} from "@/utils/page-images";
-import {
-  hasValidImageSize,
-  isPageImageTooSmall,
-  resolveImageSize,
-} from "@/utils/page-image-size";
+import { PageImagesManager, type PageImage } from "@/utils/page-images";
+import { isPageImageTooSmall } from "@/utils/page-image-size";
 
-const GET_PAGE_IMAGES = "GET_PAGE_IMAGES";
+export type PageImagesResponse =
+  | { ok: true; images: PageImage[]; complete: boolean }
+  | { ok: false; error: string };
+
+export interface PostLoadedImageMessage {
+  type: typeof CONTENT_POPUP_POST_LOADED_IMAGE;
+  img: PageImage;
+}
+
+// The request type for getting page images from the content script
+export const REQ_TYPE_GET_PAGE_IMAGES = "GET_PAGE_IMAGES";
+
+// The port name for the long-lived connection between the content script and the popup
+export const CONTENT_POPUP_PORT_NAME = "CONTENT_POPUP_PORT";
+
+// The message type for posting a loaded image from the content script to the popup
+export const CONTENT_POPUP_POST_LOADED_IMAGE =
+  "CONTENT_POPUP_POST_LOADED_IMAGE";
+
+export function isPostLoadedImageMessage(
+  message: any,
+): message is PostLoadedImageMessage {
+  return message.type === CONTENT_POPUP_POST_LOADED_IMAGE;
+}
 
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
-    const loadedPageImages = new Map<string, PageImage>();
+    const pageImgs = new PageImagesManager();
+    let port: Browser.runtime.Port | null = null;
 
-    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message?.type !== GET_PAGE_IMAGES) {
+    function connect(): boolean {
+      try {
+        port = browser.runtime.connect({ name: CONTENT_POPUP_PORT_NAME });
+        port.onDisconnect.addListener(() => {
+          port = null;
+        });
+        return true;
+      } catch (error) {
         return false;
       }
+    }
 
-      (async function () {
-        try {
-          const images = await collectImages(loadedPageImages);
-          sendResponse({
-            ok: true,
-            images,
-          });
-        } catch (error) {
-          sendResponse({
-            ok: false,
-            error: formatError(error, "Unable to read page images"),
-          });
-        }
-      })();
+    function postLoadedImage(img: PageImage) {
+      if (isPageImageTooSmall(img)) {
+        return;
+      }
+      if (!port && !connect()) {
+        return;
+      }
+      port!.postMessage({
+        type: CONTENT_POPUP_POST_LOADED_IMAGE,
+        img,
+      } as PostLoadedImageMessage);
+    }
 
+    async function loadImages(
+      sendResponse: (response: PageImagesResponse) => void,
+    ) {
+      try {
+        const imgElements = document.querySelectorAll("img");
+        const images = (
+          await pageImgs.collectPageImages(Array.from(imgElements))
+        ).filter((img) => !isPageImageTooSmall(img));
+        sendResponse({
+          ok: true,
+          images,
+          complete: pageImgs.isComplete,
+        });
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          error: formatError(error, "Unable to read page images"),
+        });
+        return;
+      }
+
+      if (pageImgs.isComplete || pageImgs.isLoadingUncompleteImages) {
+        return;
+      }
+
+      // Start loading uncomplete images and post them to the popup as they are loaded
+      connect();
+      await pageImgs.loadUncompleteImages(postLoadedImage);
+      port?.disconnect();
+      port = null;
+    }
+
+    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message?.type !== REQ_TYPE_GET_PAGE_IMAGES) {
+        return false;
+      }
+      loadImages(sendResponse);
       return true;
     });
   },
 });
-
-async function collectImages(
-  loadedPageImages: Map<string, PageImage>,
-): Promise<PageImage[]> {
-  const images: PageImage[] = [];
-  const seenSrcs = new Set<string>();
-
-  const imageElements = document.querySelectorAll("img");
-
-  const imagePromises = Array.from(imageElements).map(async (img) => {
-    const src = imageSrc(img);
-    if (src.length === 0 || seenSrcs.has(src)) {
-      return;
-    }
-    seenSrcs.add(src);
-
-    const loadedImage = loadedPageImages.get(src);
-    if (loadedImage) {
-      images.push(loadedImage);
-      return;
-    }
-
-    if (!isVisible(img)) {
-      return;
-    }
-
-    const pageImage = await convertToPageImage(img, src);
-    if (isPageImageTooSmall(pageImage)) {
-      return;
-    }
-
-    images.push(pageImage);
-    if (hasValidImageSize(pageImage)) {
-      loadedPageImages.set(src, pageImage);
-    }
-  });
-
-  await Promise.all(imagePromises);
-
-  return images;
-}
-
-function isVisible(img: Element): boolean {
-  const style = window.getComputedStyle(img);
-  return (
-    img.isConnected &&
-    img.getClientRects().length > 0 &&
-    style.display !== "none" &&
-    style.visibility !== "hidden"
-  );
-}
-
-async function convertToPageImage(
-  img: HTMLImageElement,
-  src: string,
-): Promise<PageImage> {
-  const size = await resolveImageSize(img, src);
-  return {
-    complete: size.complete,
-    src,
-    name: getNameWithoutExtFromUrl(src) ?? "image",
-    type: await getImageType(src),
-    width: size.width,
-    height: size.height,
-  };
-}
-
-function imageSrc(img: HTMLImageElement): string {
-  return (
-    img.currentSrc ||
-    img.src ||
-    img.dataset.src ||
-    img.dataset.lazySrc ||
-    img.dataset.original ||
-    img.dataset.imgSrc ||
-    img.getAttribute("data-lazy") ||
-    img.getAttribute("data-url") ||
-    ""
-  );
-}
