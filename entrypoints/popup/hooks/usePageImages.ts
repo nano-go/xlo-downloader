@@ -3,10 +3,10 @@ import { type PageImage } from "@/utils/page-images";
 import { formatError } from "@/utils/errors";
 import { useAsyncLock } from "./useAsyncLock";
 import {
-  REQ_TYPE_GET_PAGE_IMAGES,
+  TYPE_GET_PAGE_IMAGES,
   PageImagesResponse,
-  CONTENT_POPUP_PORT_NAME,
-  isPostLoadedImageMessage,
+  TYPE_POST_NEW_IMG,
+  TYPE_COMPLETE_LOADING,
 } from "@/entrypoints/content";
 
 export type LoadState =
@@ -70,38 +70,6 @@ export function usePageImages() {
     [setLoadState],
   );
 
-  const handleConnect = useCallback(
-    (port: Browser.runtime.Port) => {
-      if (port.name !== CONTENT_POPUP_PORT_NAME) {
-        return;
-      }
-
-      // Listen for new images from content script
-      port.onMessage.addListener((message) => {
-        if (!isPostLoadedImageMessage(message)) {
-          return;
-        }
-        addPageImages([message.img]);
-      });
-
-      // Listen for port disconnection to know when to stop listening for new images
-      port.onDisconnect.addListener(() => {
-        setLoadState((prevState) => {
-          if (prevState.status !== "success") {
-            return prevState;
-          }
-          return {
-            ...prevState,
-            complete: true,
-          };
-        });
-
-        browser.runtime.onConnect.removeListener(handleConnect);
-      });
-    },
-    [addPageImages, setLoadState],
-  );
-
   const [_, loadImages] = useAsyncLock(async () => {
     const [tab] = await browser.tabs.query({
       active: true,
@@ -146,19 +114,40 @@ export function usePageImages() {
       complete: response.complete,
       tabId,
     });
-
-    if (response.complete) {
-      return;
-    }
-
-    // Listen for new images from content script
-    browser.runtime.onConnect.addListener(handleConnect);
-  }, [setLoadState, handleConnect]);
+  }, [setLoadState]);
 
   // Initial load of page images
   useEffect(() => {
     void loadImages();
   }, [loadImages]);
+
+  // Listen for new images loaded in the page and update the state accordingly
+  useEffect(() => {
+    const port = browser.runtime.connect({ name: "background-popup" });
+    port.onMessage.addListener((msg) => {
+      switch (msg.type) {
+        case TYPE_POST_NEW_IMG: {
+          addPageImages([msg.img]);
+          break;
+        }
+
+        case TYPE_COMPLETE_LOADING: {
+          setLoadState((prevState) => {
+            if (prevState.status !== "success" || prevState.complete) {
+              return prevState;
+            }
+            return {
+              ...prevState,
+              complete: true,
+            };
+          });
+          break;
+        }
+      }
+    });
+
+    return () => port.disconnect();
+  }, []);
 
   return { loadState, loadImages };
 }
@@ -166,7 +155,7 @@ export function usePageImages() {
 async function getPageImages(tabId: number): Promise<PageImagesResponse> {
   try {
     const response = (await browser.tabs.sendMessage(tabId, {
-      type: REQ_TYPE_GET_PAGE_IMAGES,
+      type: TYPE_GET_PAGE_IMAGES,
     })) as PageImagesResponse | undefined;
 
     return (
