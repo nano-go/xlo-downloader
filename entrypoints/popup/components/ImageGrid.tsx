@@ -1,5 +1,5 @@
 import { LuCheck } from "react-icons/lu";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { PageImage } from "@/utils/page-images";
 
 type ImageGridProps = {
@@ -13,20 +13,59 @@ export function ImageGrid({
   selectedImages,
   onImageClick,
 }: ImageGridProps) {
+  const renderedSrcs = useRef<Set<string>>(new Set());
+  const newSrcs = useMemo(() => {
+    const currentSrcs = new Set(images.map((i) => i.src));
+    const newSet = new Set<string>();
+    if (renderedSrcs.current.size > 0) {
+      for (const src of currentSrcs) {
+        if (!renderedSrcs.current.has(src)) newSet.add(src);
+      }
+    }
+    renderedSrcs.current = currentSrcs;
+    return newSet;
+  }, [images]);
+
+  const [animatingSrcs, setAnimatingSrcs] = useState<Set<string>>(new Set());
+
+  useMemo(() => {
+    if (newSrcs.size > 0) {
+      setAnimatingSrcs((prev) => {
+        const next = new Set(prev);
+        for (const src of newSrcs) next.add(src);
+        return next;
+      });
+    }
+  }, [newSrcs]);
+
+  const handleAnimationEnd = useCallback((src: string) => {
+    setAnimatingSrcs((prev) => {
+      if (!prev.has(src)) return prev;
+      const next = new Set(prev);
+      next.delete(src);
+      return next;
+    });
+  }, []);
+
   const columns = useMemo(() => createMasonryColumns(images, 2), [images]);
 
   return (
     <div className="grid grid-cols-2 gap-3">
       {columns.map((column, index) => (
         <div className="flex flex-col gap-3" key={index}>
-          {column.map((image) => (
-            <ImageCard
-              key={image.src}
-              image={image}
-              isSelected={selectedImages.has(image.src)}
-              onImageClick={onImageClick}
-            />
-          ))}
+          {column.map((image) => {
+            const isNew = newSrcs.has(image.src) || animatingSrcs.has(image.src);
+            return (
+              <ImageCard
+                key={image.src}
+                image={image}
+                isNew={isNew}
+                isSelected={selectedImages.has(image.src)}
+                onImageClick={onImageClick}
+                onAnimationEnd={isNew ? () => handleAnimationEnd(image.src) : undefined}
+              />
+            );
+          })}
         </div>
       ))}
     </div>
@@ -55,22 +94,27 @@ export function createMasonryColumns(images: PageImage[], columnCount: number) {
 
 function ImageCard({
   image,
+  isNew,
   isSelected,
   onImageClick,
+  onAnimationEnd,
 }: {
   image: PageImage;
+  isNew: boolean;
   isSelected: boolean;
   onImageClick?: (image: PageImage) => void;
+  onAnimationEnd?: (() => void) | undefined;
 }) {
   const aspectRatio = getAspectRatio(image);
 
   return (
     <article
-      className={`overflow-hidden rounded-lg border bg-white shadow-sm transition ${
+      className={`overflow-hidden rounded-lg border bg-white shadow-sm transition ${isNew ? "animate-new-image" : ""} ${
         isSelected
           ? "border-slate-950 ring-2 ring-slate-950/20"
           : "border-slate-200"
       }`}
+      onAnimationEnd={onAnimationEnd}
     >
       <button
         aria-pressed={isSelected}

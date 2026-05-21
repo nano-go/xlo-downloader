@@ -1,3 +1,18 @@
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-new-image {
+  animation: fadeSlideIn 0.8s ease-out both;
+}
+
 .range-input {
   appearance: none;
   background: transparent;
