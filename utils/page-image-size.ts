@@ -1,7 +1,7 @@
 import type { PageImage } from "./page-images";
 
-const WAIT_FOR_ELEMENT_TIMEOUT_MS = 400;
-const PROBE_IMAGE_TIMEOUT_MS = 1400;
+const WAIT_FOR_ELEMENT_TIMEOUT_MS = 1000;
+const PROBE_IMAGE_TIMEOUT_MS = 10000;
 
 export type ResolvedImageSize = {
   complete: boolean;
@@ -17,10 +17,12 @@ export async function resolveImageSize(
     return sizeFromElement(img);
   }
 
-  await waitForElementImage(img, WAIT_FOR_ELEMENT_TIMEOUT_MS);
+  if (img.loading !== "lazy") {
+    await waitForElementImage(img, WAIT_FOR_ELEMENT_TIMEOUT_MS);
 
-  if (hasElementSize(img)) {
-    return sizeFromElement(img);
+    if (hasElementSize(img)) {
+      return sizeFromElement(img);
+    }
   }
 
   return probeImageSize(src, PROBE_IMAGE_TIMEOUT_MS);
