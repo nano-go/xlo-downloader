@@ -1,6 +1,9 @@
 import { resolvePageImageInfo as resolveImageElement } from "@/utils/page-image-resolver";
 import { type PageImage } from "@/utils/page-image-types";
 
+const COLLECT_BATCH_SIZE = 70;
+const LOAD_MAX_CONCURRENT = 30;
+
 export class PageImagesLoader {
   private loadedPageImages: Map<string, PageImage> = new Map();
   private uncompleteImages: Map<string, HTMLImageElement> = new Map();
@@ -25,34 +28,37 @@ export class PageImagesLoader {
    * @param imgElements An array of HTMLImageElement to collect images from.
    * @returns A promise that resolves to an array of PageImage objects.
    */
-  public async collectPageImages(imgElements: HTMLImageElement[]) {
+public async collectPageImages(imgElements: HTMLImageElement[]) {
     const images: PageImage[] = [];
     const seenSrcs = new Set<string>();
+    const toResolve: { img: HTMLImageElement; src: string }[] = [];
 
-    const imagePromises = imgElements.map(async (img) => {
+    for (const img of imgElements) {
       const src = imageSrc(img);
-      if (!src || seenSrcs.has(src)) {
-        return;
-      }
+      if (!src || seenSrcs.has(src)) continue;
       seenSrcs.add(src);
 
       const loadedImage = this.loadedPageImages.get(src);
       if (loadedImage) {
         images.push(loadedImage);
-        return;
+        continue;
       }
 
-      if (this.uncompleteImages.has(src)) {
-        // The images that are in the uncompleteImages map will be handled in the
-        // loadUncompleteImages function, so we can skip them here.
-        return;
-      }
+      if (this.uncompleteImages.has(src)) continue;
 
       if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
         this.uncompleteImages.set(src, img);
-        return;
+        continue;
       }
 
+      if (toResolve.length < COLLECT_BATCH_SIZE) {
+        toResolve.push({ img, src });
+      } else {
+        this.uncompleteImages.set(src, img);
+      }
+    }
+
+    const imagePromises = toResolve.map(async ({ img, src }) => {
       const pageImage = await resolveImageElement(img, src);
       if (this.pushLoadedPageImage(pageImage)) {
         images.push(pageImage);
@@ -75,26 +81,34 @@ export class PageImagesLoader {
       return;
     }
     this._isLoadingUncompleteImages = true;
-    const uncompleteImages = this.uncompleteImages;
 
-    await Promise.allSettled(
-      [...uncompleteImages.entries()].map(async ([src, img]) => {
-        try {
-          const pageImage = await resolveImageElement(img, src);
-          const push = this.pushLoadedPageImage(pageImage);
-          uncompleteImages.delete(src);
-          if (push) {
-            onLoaded(pageImage);
+    const entries = [...this.uncompleteImages.entries()];
+    let index = 0;
+
+    const workers = Array.from(
+      { length: Math.min(LOAD_MAX_CONCURRENT, entries.length) },
+      () =>
+        (async () => {
+          while (index < entries.length) {
+            const [src, img] = entries[index++];
+            try {
+              const pageImage = await resolveImageElement(img, src);
+              const push = this.pushLoadedPageImage(pageImage);
+              this.uncompleteImages.delete(src);
+              if (push) {
+                onLoaded(pageImage);
+              }
+            } catch {
+              this.uncompleteImages.delete(src);
+            }
           }
-        } catch (error) {
-          uncompleteImages.delete(src);
-          return;
-        }
-      }),
+        })(),
     );
 
+    await Promise.allSettled(workers);
+
     this._isLoadingUncompleteImages = false;
-    if (uncompleteImages.size > 0) {
+    if (this.uncompleteImages.size > 0) {
       await this.loadUncompleteImages(onLoaded);
     }
   }
