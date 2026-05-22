@@ -4,5 +4,5 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx"
   },
-  "exclude": ["tests"]
+  "exclude": ["tests", "**/*.test.ts", "**/*.test.tsx"]
 }
