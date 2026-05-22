@@ -108,7 +108,7 @@ export function HideOnScrollHeader({
 
   return (
     <div
-      className={`overflow-hidden transition-[max-height,transform] duration-200 ease-in-out ${
+      className={`overflow-hidden transition-[max-height,transform] duration-300 ease-in-out ${
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
       style={{ maxHeight: isVisible ? contentHeight : 0 }}

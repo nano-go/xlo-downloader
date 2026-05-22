@@ -55,10 +55,10 @@ export function FilterView({
           <div className="p-1 grid grid-cols-3 gap-1 rounded-xl bg-slate-100">
             {typeOptions.map((option) => (
               <button
-                className={`min-h-11 rounded-lg px-2 text-sm font-medium transition ${
+                className={`min-h-10 rounded-lg px-2 text-sm font-medium transition-colors duration-150 ${
                   filters.type === option.value
                     ? "bg-white text-slate-950 shadow-sm"
-                    : "text-slate-500"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
                 key={option.value}
                 type="button"
@@ -88,16 +88,18 @@ export function FilterView({
           }
         />
 
-        <div className="pt-1 grid grid-cols-2 gap-3">
+        <div className="pt-2 grid grid-cols-2 gap-3">
           <ActionButton
             disabled={resultCount === 0}
             label="Select All"
             onClick={onSelectAll}
+            variant="primary"
           />
           <ActionButton
             disabled={selectedCount === 0}
             label="Clear"
             onClick={onClearSelection}
+            variant="secondary"
           />
         </div>
       </div>

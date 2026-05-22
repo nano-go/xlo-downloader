@@ -67,7 +67,7 @@ export function BottomSheet({
   return (
     <div
       role="dialog"
-      className="fixed inset-0 z-50 flex items-end overflow-hidden overscroll-none bg-slate-950/35"
+      className="fixed inset-0 z-50 flex items-end overflow-hidden overscroll-none bg-black/40 backdrop-blur-sm"
     >
       <button
         aria-label={`Close ${title}`}
@@ -77,8 +77,8 @@ export function BottomSheet({
         onClick={onClose}
       />
 
-      <section className="relative max-h-[calc(100vh-24px)] w-full overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-200 bg-white px-4 pb-4 pt-3 shadow-2xl">
-        <div className="w-10 h-1 mx-auto mb-3 rounded-full bg-slate-300" />
+      <section className="relative max-h-[calc(100vh-24px)] w-full overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-200/80 bg-white px-4 pb-4 pt-3 shadow-2xl">
+        <div className="w-10 h-1 mx-auto mb-2 rounded-full bg-slate-300" />
 
         <div className="flex items-start justify-between mb-4 gap-3">
           <div>

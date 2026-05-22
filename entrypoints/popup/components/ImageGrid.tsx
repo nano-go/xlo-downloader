@@ -50,9 +50,9 @@ export function ImageGrid({
   const columns = useMemo(() => createMasonryColumns(images, 2), [images]);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-2.5">
       {columns.map((column, index) => (
-        <div className="flex flex-col gap-3" key={index}>
+        <div className="flex flex-col gap-2.5" key={index}>
           {column.map((image) => {
             const isNew =
               newSrcs.has(image.src) || animatingSrcs.has(image.src);
@@ -112,10 +112,12 @@ function ImageCard({
 
   return (
     <article
-      className={`overflow-hidden rounded-lg border bg-white shadow-sm transition ${isNew ? "animate-new-image" : ""} ${
+      className={`overflow-hidden rounded-xl transition-all duration-300 ease-in-out cursor-pointer ${
+        isNew ? "animate-new-image" : ""
+      } ${
         isSelected
-          ? "border-slate-950 ring-2 ring-slate-950/20"
-          : "border-slate-200"
+          ? "ring-2 ring-blue-500 shadow-md"
+          : "bg-white shadow-sm hover:shadow-md hover:scale-[1.02]"
       }`}
       onAnimationEnd={onAnimationEnd}
     >
@@ -136,16 +138,14 @@ function ImageCard({
               src={image.src}
             />
             {isSelected && (
-              <div className="absolute inset-0 flex items-start justify-end p-2 bg-slate-950/20">
-                <span className="flex items-center justify-center text-sm font-semibold text-white rounded-full h-7 w-7 bg-slate-950 shadow-sm">
-                  <LuCheck aria-hidden="true" className="w-4 h-4 text-white" />
-                </span>
+              <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                <LuCheck aria-hidden="true" className="w-3 h-3 text-white" />
               </div>
             )}
           </div>
         </div>
-        <div className="px-2.5 py-2 text-xs font-medium text-slate-600">
-          {image.width} x {image.height}
+        <div className="px-2 py-1.5 text-[11px] text-slate-500">
+          {image.width} × {image.height}
         </div>
       </button>
     </article>

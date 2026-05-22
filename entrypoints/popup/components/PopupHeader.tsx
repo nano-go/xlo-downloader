@@ -30,30 +30,36 @@ export function PopupHeader({
   onToggleSelectFilteredImages,
 }: PopupHeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white border-b gap-3 border-slate-200">
-      <div>
-        <h1 className="text-base font-semibold leading-5 flex items-center gap-1.5">
+    <header className="flex items-center justify-between px-4 py-2.5">
+      <div className="flex items-center gap-2">
+        <h1 className="text-[15px] font-semibold leading-5 text-slate-900 flex items-center gap-1.5">
           XLO Downloader
           {state.status === "success" &&
             (state.complete ? (
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
             ) : (
-              <LuLoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin text-slate-400" />
+              <LuLoaderCircle
+                aria-hidden="true"
+                className="h-3.5 w-3.5 animate-spin text-slate-400"
+              />
             ))}
         </h1>
-        <p className="mt-0.5 text-xs text-slate-500">
-          {state.status === "loading"
-            ? "Loading..."
-            : `${imageCount} images · ${selectedCount} selected`}
-        </p>
+        <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+          {imageCount}
+        </span>
+        {selectedCount > 0 && (
+          <span className="rounded-lg bg-slate-950 px-2 py-0.5 text-xs text-white">
+            {selectedCount}
+          </span>
+        )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <HeaderIconButton
           aria-label="Open filters"
           title="Open filters"
           onClick={onOpenControls}
         >
-          <LuFilter aria-hidden="true" className="w-5 h-5" />
+          <LuFilter aria-hidden="true" className="w-[18px] h-[18px]" />
         </HeaderIconButton>
         <HeaderIconButton
           aria-label={
@@ -70,9 +76,12 @@ export function PopupHeader({
           onClick={onToggleSelectFilteredImages}
         >
           {isAllSelected ? (
-            <LuSquareMinus aria-hidden="true" className="w-5 h-5" />
+            <LuSquareMinus aria-hidden="true" className="w-[18px] h-[18px]" />
           ) : (
-            <LuSquareCheckBig aria-hidden="true" className="w-5 h-5" />
+            <LuSquareCheckBig
+              aria-hidden="true"
+              className="w-[18px] h-[18px]"
+            />
           )}
         </HeaderIconButton>
         <HeaderIconButton
@@ -80,7 +89,7 @@ export function PopupHeader({
           title="Refresh images"
           onClick={onRefresh}
         >
-          <LuRefreshCw aria-hidden="true" className="w-5 h-5" />
+          <LuRefreshCw aria-hidden="true" className="w-[18px] h-[18px]" />
         </HeaderIconButton>
       </div>
     </header>
@@ -103,7 +112,7 @@ function HeaderIconButton({
   return (
     <button
       aria-label={ariaLabel}
-      className="flex items-center justify-center bg-transparent h-11 w-11 rounded-xl text-slate-700 transition hover:bg-slate-100 active:scale-95 active:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent disabled:active:scale-100"
+      className="flex items-center justify-center bg-transparent h-9 w-9 rounded-lg text-slate-600 transition-colors duration-200 hover:bg-slate-100 active:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
       disabled={disabled}
       title={title}
       type="button"

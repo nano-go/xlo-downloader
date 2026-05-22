@@ -110,7 +110,7 @@ function App() {
     <main className="w-full h-screen overflow-hidden bg-slate-50 text-slate-950">
       <ToastProvider />
       <div
-        className="fixed inset-x-0 top-0 z-40 bg-white shadow-sm"
+        className="fixed inset-x-0 top-0 z-40 backdrop-blur-xl bg-white/75 border-b border-black/[0.06]"
         ref={topBarRef}
       >
         <HideOnScrollHeader scrollContainerRef={imageListRef}>
@@ -125,7 +125,7 @@ function App() {
             onToggleSelectFilteredImages={() => toggleAll()}
           />
         </HideOnScrollHeader>
-        <section className="px-4 py-3 bg-white border-b grid grid-cols-2 gap-2 border-slate-200">
+        <section className="px-4 pb-3 pt-1 grid grid-cols-2 gap-2">
           <ActionButton
             disabled={selectedImages.size === 0 || isDownloading}
             icon={<LuDownload aria-hidden="true" className="w-4 h-4" />}
@@ -137,11 +137,12 @@ function App() {
             icon={<LuCopy aria-hidden="true" className="w-4 h-4" />}
             label={isCopying ? "Copying..." : "Copy URLs"}
             onClick={() => void runCopySelectedImageUrls()}
+            variant="secondary"
           />
         </section>
       </div>
       <section
-        className="h-full p-3 overflow-y-auto"
+        className="h-full p-2.5 overflow-y-auto"
         ref={imageListRef}
         style={{ paddingTop: topBarHeight + 12 }}
       >
