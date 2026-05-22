@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { PageImage } from "@/utils/page-images";
+import { PageImage } from "@/utils/page-image-types";
 
 export type UseSelectedImagesReturn = {
   selectedImages: Set<string>;

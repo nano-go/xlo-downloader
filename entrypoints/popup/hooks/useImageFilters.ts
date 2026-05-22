@@ -1,4 +1,4 @@
-import { PageImage } from "@/utils/page-images";
+import { PageImage } from "@/utils/page-image-types";
 import { useEffect, useMemo, useState } from "react";
 
 export type ImageTypeFilter = "all" | "png-jpg" | "gif-webp";

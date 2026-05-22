@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { type PageImage } from "@/utils/page-images";
+import { type PageImage } from "@/utils/page-image-types";
 import { formatError } from "@/utils/errors";
 import { useAsyncLock } from "./useAsyncLock";
 import {

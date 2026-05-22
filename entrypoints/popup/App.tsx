@@ -11,7 +11,7 @@ import { Toast, ToastProvider } from "./components/Toast";
 import { useAsyncLock } from "./hooks/useAsyncLock";
 import { LoadState, usePageImages } from "./hooks/usePageImages";
 import { LuCopy, LuDownload } from "react-icons/lu";
-import { PageImage } from "@/utils/page-images";
+import { PageImage } from "@/utils/page-image-types";
 import { DownloadImagesMessage } from "../background";
 import { useImageFilters } from "./hooks/useImageFilters";
 import { useSelectedImages } from "./hooks/useSelectedImages";

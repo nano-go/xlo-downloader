@@ -1,6 +1,6 @@
 import { LuCheck } from "react-icons/lu";
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { PageImage } from "@/utils/page-images";
+import type { PageImage } from "@/utils/page-image-types";
 
 type ImageGridProps = {
   images: PageImage[];
@@ -54,7 +54,8 @@ export function ImageGrid({
       {columns.map((column, index) => (
         <div className="flex flex-col gap-3" key={index}>
           {column.map((image) => {
-            const isNew = newSrcs.has(image.src) || animatingSrcs.has(image.src);
+            const isNew =
+              newSrcs.has(image.src) || animatingSrcs.has(image.src);
             return (
               <ImageCard
                 key={image.src}
@@ -62,7 +63,9 @@ export function ImageGrid({
                 isNew={isNew}
                 isSelected={selectedImages.has(image.src)}
                 onImageClick={onImageClick}
-                onAnimationEnd={isNew ? () => handleAnimationEnd(image.src) : undefined}
+                onAnimationEnd={
+                  isNew ? () => handleAnimationEnd(image.src) : undefined
+                }
               />
             );
           })}

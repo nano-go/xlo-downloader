@@ -1,5 +1,6 @@
 import { formatError } from "@/utils/errors";
-import { PageImagesManager, type PageImage } from "@/utils/page-images";
+import { PageImagesLoader } from "@/utils/page-image-loader";
+import { type PageImage } from "@/utils/page-image-types";
 
 export type PageImagesResponse =
   | { ok: true; images: PageImage[]; complete: boolean }
@@ -25,7 +26,7 @@ export const TYPE_COMPLETE_LOADING = "CONTENT_COMPLETE_LOADING";
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
-    const pageImgs = new PageImagesManager();
+    const pageImgs = new PageImagesLoader();
 
     function postLoadedImage(img: PageImage) {
       if (isPageImageTooSmall(img)) {

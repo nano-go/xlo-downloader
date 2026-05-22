@@ -1,14 +1,7 @@
-import { resolvePageImageInfo as resolveImageElement } from "@/utils/page-image-info";
+import { resolvePageImageInfo as resolveImageElement } from "@/utils/page-image-resolver";
+import { type PageImage } from "@/utils/page-image-types";
 
-export type PageImage = {
-  src: string;
-  name: string;
-  type: ImageType;
-  width: number;
-  height: number;
-};
-
-export class PageImagesManager {
+export class PageImagesLoader {
   private loadedPageImages: Map<string, PageImage> = new Map();
   private uncompleteImages: Map<string, HTMLImageElement> = new Map();
   private _isLoadingUncompleteImages = false;

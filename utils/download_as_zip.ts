@@ -1,4 +1,4 @@
-import { PageImage } from "./page-images";
+import { PageImage } from "@/utils/page-image-types";
 
 const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html";
 

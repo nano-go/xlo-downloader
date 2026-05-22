@@ -1,5 +1,5 @@
 import { downloadAndZip } from "@/utils/download_as_zip";
-import { PageImage } from "@/utils/page-images";
+import { PageImage } from "@/utils/page-image-types";
 
 export interface DownloadImagesMessage {
   type: "DOWNLOAD_IMAGES";

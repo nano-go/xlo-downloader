@@ -1,5 +1,5 @@
 import { downloadZip } from "client-zip";
-import { PageImage } from "./page-images";
+import { PageImage } from "@/utils/page-image-types";
 
 export interface CreateZipObjectUrlMessage {
   type: "CREATE_ZIP_OBJECT_URL";

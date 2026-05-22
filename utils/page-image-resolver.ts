@@ -1,17 +1,14 @@
-import { resolveBase64Image } from "./data-base64";
-import type { PageImage } from "./page-images";
-
-export type ImageType = "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg";
-export const VALID_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "svg"];
-
-export function isValidImageType(type: string): type is ImageType {
-  return VALID_EXTS.includes(type);
-}
+import { resolveBase64Image } from "@/utils/data-base64";
+import {
+  type PageImage,
+  type ImageType,
+  isValidImageType,
+} from "@/utils/page-image-types";
 
 const WAIT_FOR_ELEMENT_TIMEOUT_MS = 1000;
 const PROBE_IMAGE_TIMEOUT_MS = 10000;
 
-export type ResolvedImageResolution = {
+type ResolvedImageResolution = {
   width: number;
   height: number;
 };

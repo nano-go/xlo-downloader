@@ -1,5 +1,8 @@
-import type { PageImage } from "./page-images";
-import { isValidImageType, type ImageType } from "./page-image-info";
+import {
+  type PageImage,
+  type ImageType,
+  isValidImageType,
+} from "./page-image-types";
 
 const DATA_BASE64_PREFIX_RE = /^data:image\/[^;]+;base64,/;
 
@@ -214,4 +217,3 @@ function parseWebpDimensions(
 
   return null;
 }
-
