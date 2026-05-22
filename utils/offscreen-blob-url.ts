@@ -7,51 +7,21 @@ export interface CreateZipObjectUrlMessage {
   revokeAfterMs?: number;
 }
 
-export interface CreateObjectUrlMessage {
-  type: "CREATE_OBJECT_URL";
-  buffer: ArrayBuffer;
-  mimeType: string;
-  revokeAfterMs?: number;
-}
-
-export interface RevokeObjectUrlMessage {
-  type: "REVOKE_OBJECT_URL";
-  url: string;
-}
-
-type OffscreenMessage =
-  | CreateZipObjectUrlMessage
-  | CreateObjectUrlMessage
-  | RevokeObjectUrlMessage;
-
 const objectUrls = new Set<string>();
 
-browser.runtime.onMessage.addListener(
-  (message: OffscreenMessage, _sender, sendResponse) => {
-    if (message?.type === "CREATE_ZIP_OBJECT_URL") {
-      createZipObjectUrl(message)
-        .then(sendResponse)
-        .catch((error) => {
-          sendResponse({
-            ok: false,
-            error: formatError(error, String),
-          });
+browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "CREATE_ZIP_OBJECT_URL") {
+    createZipObjectUrl(message)
+      .then(sendResponse)
+      .catch((error) => {
+        sendResponse({
+          ok: false,
+          error: formatError(error, String),
         });
-      return true;
-    }
-
-    if (message?.type === "CREATE_OBJECT_URL") {
-      sendResponse(createObjectUrl(message));
-      return true;
-    }
-
-    if (message?.type === "REVOKE_OBJECT_URL") {
-      revokeObjectUrl(message.url);
-      sendResponse({ ok: true });
-      return true;
-    }
-  },
-);
+      });
+    return true;
+  }
+});
 
 async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
   if (message.images.length === 0) {
@@ -64,7 +34,6 @@ async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
       const res = await fetch(img.src, {
         cache: "force-cache",
       });
-      const ext = img.type;
       let name = img.name;
       if (names.has(name)) {
         const count = names.get(name)! + 1;
@@ -74,18 +43,13 @@ async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
         names.set(name, 0);
       }
       return {
-        name: `${name}.${ext}`,
+        name: `${name}.${img.type}`,
         input: res,
       };
     }),
   );
 
   const blob = await downloadZip(files).blob();
-  return createObjectUrlFromBlob(blob, message.revokeAfterMs);
-}
-
-function createObjectUrl(message: CreateObjectUrlMessage) {
-  const blob = new Blob([message.buffer], { type: message.mimeType });
   return createObjectUrlFromBlob(blob, message.revokeAfterMs);
 }
 
