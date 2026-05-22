@@ -6,7 +6,7 @@ import {
 } from "@/utils/page-image-types";
 
 const WAIT_FOR_ELEMENT_TIMEOUT_MS = 1000;
-const PROBE_IMAGE_TIMEOUT_MS = 10000;
+const PROBE_IMAGE_TIMEOUT_MS = 30000;
 
 type ResolvedImageResolution = {
   width: number;
