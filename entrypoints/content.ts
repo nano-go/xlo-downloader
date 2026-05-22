@@ -1,6 +1,5 @@
 import { formatError } from "@/utils/errors";
 import { PageImagesManager, type PageImage } from "@/utils/page-images";
-import { isPageImageTooSmall } from "@/utils/page-image-size";
 
 export type PageImagesResponse =
   | { ok: true; images: PageImage[]; complete: boolean }
@@ -37,6 +36,10 @@ export default defineContentScript({
         type: TYPE_POST_NEW_IMG,
         img,
       });
+    }
+
+    function isPageImageTooSmall(image: PageImage): boolean {
+      return image.width < 40 || image.height < 40;
     }
 
     async function loadImages(

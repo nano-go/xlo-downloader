@@ -1,7 +1,4 @@
-import { resolveImageSize, hasValidImageSize } from "@/utils/page-image-size";
-
-export type ImageType = "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg";
-const VALID_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "svg"];
+import { resolvePageImageInfo as resolveImageElement } from "@/utils/page-image-info";
 
 export type PageImage = {
   src: string;
@@ -63,7 +60,7 @@ export class PageImagesManager {
         return;
       }
 
-      const pageImage = await convertToPageImage(img, src);
+      const pageImage = await resolveImageElement(img, src);
       if (this.pushLoadedPageImage(pageImage)) {
         images.push(pageImage);
       }
@@ -90,7 +87,7 @@ export class PageImagesManager {
     await Promise.allSettled(
       [...uncompleteImages.entries()].map(async ([src, img]) => {
         try {
-          const pageImage = await loadUncompleteImage(img, src);
+          const pageImage = await resolveImageElement(img, src);
           const push = this.pushLoadedPageImage(pageImage);
           uncompleteImages.delete(src);
           if (push) {
@@ -119,31 +116,6 @@ export class PageImagesManager {
   }
 }
 
-async function convertToPageImage(
-  img: HTMLImageElement,
-  src: string,
-): Promise<PageImage> {
-  return {
-    src,
-    name: getNameWithoutExtFromUrl(src) ?? "image",
-    type: await getImageType(src),
-    width: img.naturalWidth,
-    height: img.naturalHeight,
-  };
-}
-
-async function loadUncompleteImage(img: HTMLImageElement, src: string) {
-  const size = await resolveImageSize(img, src);
-  const type = await getImageType(src);
-  return {
-    src,
-    name: getNameWithoutExtFromUrl(src) ?? "image",
-    type,
-    width: size.width,
-    height: size.height,
-  };
-}
-
 function imageSrc(img: HTMLImageElement): string {
   return (
     img.currentSrc ||
@@ -158,70 +130,6 @@ function imageSrc(img: HTMLImageElement): string {
   );
 }
 
-function getNameWithoutExtFromUrl(url: string): string | undefined {
-  const path = url.split("?")[0].split("#")[0];
-  const filename = path.split("/").pop();
-
-  if (!filename) {
-    return undefined;
-  }
-
-  const lastDotIndex = filename.lastIndexOf(".");
-  if (lastDotIndex <= 0) {
-    return filename;
-  }
-
-  return filename.slice(0, lastDotIndex);
-}
-
-async function getImageType(src: string): Promise<ImageType> {
-  let type = getImageTypeFromUrl(src);
-  if (!type) {
-    type = await getImageTypeFromHeader(src);
-  }
-  return type || "jpg";
-}
-
-function getImageTypeFromUrl(url: string): ImageType | undefined {
-  let type = undefined;
-  if (url.startsWith("data:image/")) {
-    type = url.split(";")[0].split("/")[1]; // data:image/png → png
-  } else {
-    type = url.split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
-  }
-
-  if (type && VALID_EXTS.includes(type)) {
-    return type as ImageType;
-  }
-
-  return undefined;
-}
-
-async function getImageTypeFromHeader(
-  url: string,
-): Promise<ImageType | undefined> {
-  try {
-    const response = await fetch(url, { method: "HEAD", cache: "force-cache" });
-    const contentType = response.headers.get("content-type");
-    if (contentType) {
-      return getImageTypeFromContentType(contentType);
-    }
-  } catch (error) {
-    return undefined;
-  }
-}
-
-const CONTENT_TYPE_TO_EXT: Record<string, ImageType> = {
-  "image/jpeg": "jpg",
-  "image/jpg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-  "image/svg+xml": "svg",
-};
-
-function getImageTypeFromContentType(
-  contentType: string,
-): ImageType | undefined {
-  return CONTENT_TYPE_TO_EXT[contentType.toLowerCase()];
+function hasValidImageSize(image: PageImage): boolean {
+  return image.width > 0 && image.height > 0;
 }
