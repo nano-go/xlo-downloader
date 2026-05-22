@@ -14,9 +14,17 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     createZipObjectUrl(message)
       .then(sendResponse)
       .catch((error) => {
+        let msg;
+
+        if (error instanceof TypeError) {
+          msg = "network error while fetching image data";
+        } else {
+          msg = formatError(error, "unknown error while creating zip");
+        }
+
         sendResponse({
           ok: false,
-          error: formatError(error, String),
+          error: msg,
         });
       });
     return true;
