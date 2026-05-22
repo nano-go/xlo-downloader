@@ -18,7 +18,9 @@ export async function resolveImageSize(
   }
 
   if (img.loading !== "lazy") {
-    await waitForElementImage(img, WAIT_FOR_ELEMENT_TIMEOUT_MS);
+    if (!img.complete) {
+      await waitForElementImage(img, WAIT_FOR_ELEMENT_TIMEOUT_MS);
+    }
 
     if (hasElementSize(img)) {
       return sizeFromElement(img);
@@ -56,57 +58,56 @@ async function waitForElementImage(
   img: HTMLImageElement,
   timeoutMs: number,
 ): Promise<void> {
-  if (img.complete) {
-    return;
+  try {
+    await withTimeout(
+      new Promise<void>((resolve) => {
+        const onLoadOrError = () => {
+          img.removeEventListener("load", onLoadOrError);
+          img.removeEventListener("error", onLoadOrError);
+          resolve();
+        };
+        img.addEventListener("load", onLoadOrError, { once: true });
+        img.addEventListener("error", onLoadOrError, { once: true });
+      }),
+      timeoutMs,
+    );
+  } catch (error) {
+    // Ignore timeout or other errors and proceed to probe the image size
   }
-
-  await new Promise<void>((resolve) => {
-    let timeoutId: number;
-
-    const cleanup = () => {
-      img.removeEventListener("load", done);
-      img.removeEventListener("error", done);
-      window.clearTimeout(timeoutId);
-    };
-
-    const done = () => {
-      cleanup();
-      resolve();
-    };
-
-    timeoutId = window.setTimeout(done, timeoutMs);
-    img.addEventListener("load", done, { once: true });
-    img.addEventListener("error", done, { once: true });
-  });
 }
 
 async function probeImageSize(
   src: string,
   timeoutMs: number,
 ): Promise<ResolvedImageSize> {
-  return new Promise<ResolvedImageSize>((resolve) => {
-    const image = new Image();
-    let timeoutId: number;
+  const image = new Image();
+  try {
+    return await withTimeout(
+      new Promise<ResolvedImageSize>((resolve) => {
+        const finish = () => {
+          resolve({
+            complete: image.complete,
+            width: image.naturalWidth || 0,
+            height: image.naturalHeight || 0,
+          });
+        };
 
-    const cleanup = () => {
-      image.onload = null;
-      image.onerror = null;
-      window.clearTimeout(timeoutId);
+        image.onload = finish;
+        image.onerror = finish;
+        image.referrerPolicy = "no-referrer";
+        image.src = src;
+      }),
+      timeoutMs,
+    );
+  } catch (error) {
+    return {
+      complete: false,
+      width: 0,
+      height: 0,
     };
-
-    const finish = () => {
-      cleanup();
-      resolve({
-        complete: image.complete,
-        width: image.naturalWidth || 0,
-        height: image.naturalHeight || 0,
-      });
-    };
-
-    timeoutId = window.setTimeout(finish, timeoutMs);
-    image.onload = finish;
-    image.onerror = finish;
-    image.referrerPolicy = "no-referrer";
-    image.src = src;
-  });
+  } finally {
+    image.src = "";
+    image.onload = null;
+    image.onerror = null;
+  }
 }
