@@ -4,7 +4,6 @@ import { PageImage } from "@/utils/page-image-types";
 export interface CreateZipObjectUrlMessage {
   type: "CREATE_ZIP_OBJECT_URL";
   images: PageImage[];
-  revokeAfterMs?: number;
 }
 
 const objectUrls = new Set<string>();
@@ -36,29 +35,33 @@ async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
     throw new Error("No images selected");
   }
 
-  const names = new Map<string, number>();
-  const files = await Promise.all(
-    message.images.map(async (img) => {
-      const res = await fetch(img.src, {
-        cache: "force-cache",
-      });
-      let name = img.name;
-      if (names.has(name)) {
-        const count = names.get(name)! + 1;
-        names.set(name, count);
-        name += `(${count})`;
-      } else {
-        names.set(name, 0);
-      }
-      return {
-        name: `${name}.${img.type}`,
-        input: res,
-      };
-    }),
+  const responses = await Promise.all(
+    message.images.map(
+      async (img) =>
+        await fetch(img.src, {
+          cache: "force-cache",
+        }),
+    ),
   );
 
+  const names = new Map<string, number>();
+  const files = message.images.map((img, i) => {
+    let name = img.name;
+
+    while (names.has(name)) {
+      let count = names.get(name)! + 1;
+      names.set(img.name, count);
+      name = `${img.name}(${count})`;
+    }
+
+    return {
+      name: `${name}.${img.type}`,
+      input: responses[i],
+    };
+  });
+
   const blob = await downloadZip(files).blob();
-  return createObjectUrlFromBlob(blob, message.revokeAfterMs);
+  return createObjectUrlFromBlob(blob);
 }
 
 function createObjectUrlFromBlob(blob: Blob, revokeAfterMs = 60_000) {
@@ -66,6 +69,9 @@ function createObjectUrlFromBlob(blob: Blob, revokeAfterMs = 60_000) {
   objectUrls.add(url);
 
   if (revokeAfterMs > 0) {
+    // Ensure the object URL is revoked after a certain time to free up memory
+    // Actually, the URL will be revoked when the offscreen document is closed, but this is
+    // an extra safety measure in case the document remains open for a long time
     window.setTimeout(() => {
       revokeObjectUrl(url);
     }, revokeAfterMs);

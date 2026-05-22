@@ -15,7 +15,10 @@ export default defineBackground(() => {
       downloadAndZip(downloadMsg.images, downloadMsg.zipName)
         .then(() => sendResponse({ ok: true }))
         .catch((err) =>
-          sendResponse({ ok: false, error: formatError(err, String) }),
+          sendResponse({
+            ok: false,
+            error: formatError(err, "unknown error while downloading images"),
+          }),
         );
       return true;
     }

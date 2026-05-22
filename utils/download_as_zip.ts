@@ -24,7 +24,6 @@ async function createZipObjectUrl(images: PageImage[]) {
   const response = await sendOffscreenMessage({
     type: "CREATE_ZIP_OBJECT_URL",
     images,
-    revokeAfterMs: 60_000,
   } as CreateZipObjectUrlMessage);
 
   if (!response?.ok || !response.url) {

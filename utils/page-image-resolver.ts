@@ -74,14 +74,11 @@ async function waitForElementImage(
   img: HTMLImageElement,
   timeoutMs: number,
 ): Promise<void> {
+  let onLoadOrError: (() => void) | null = null;
   try {
     await withTimeout(
       new Promise<void>((resolve) => {
-        const onLoadOrError = () => {
-          img.removeEventListener("load", onLoadOrError);
-          img.removeEventListener("error", onLoadOrError);
-          resolve();
-        };
+        onLoadOrError = resolve;
         img.addEventListener("load", onLoadOrError, { once: true });
         img.addEventListener("error", onLoadOrError, { once: true });
       }),
@@ -89,6 +86,10 @@ async function waitForElementImage(
     );
   } catch (error) {
     // Ignore timeout or other errors and proceed to probe the image size
+    if (onLoadOrError) {
+      img.removeEventListener("load", onLoadOrError);
+      img.removeEventListener("error", onLoadOrError);
+    }
   }
 }
 
