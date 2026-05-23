@@ -9,34 +9,37 @@ export interface CreateZipObjectUrlMessage {
 const objectUrls = new Set<string>();
 
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === "CREATE_ZIP_OBJECT_URL") {
-    createZipObjectUrl(message)
-      .then(sendResponse)
-      .catch((error) => {
-        let msg;
+  switch (message?.type) {
+    case "CREATE_ZIP_OBJECT_URL":
+      createZipObjectUrl(message.images)
+        .then(sendResponse)
+        .catch((error) => {
+          let msg;
 
-        if (error instanceof TypeError) {
-          msg = "network error while fetching image data";
-        } else {
-          msg = formatError(error, "unknown error while creating zip");
-        }
+          if (error instanceof TypeError) {
+            msg = "network error while fetching image data";
+          } else {
+            msg = formatError(error, "unknown error while creating zip");
+          }
 
-        sendResponse({
-          ok: false,
-          error: msg,
+          sendResponse({
+            ok: false,
+            error: msg,
+          });
         });
-      });
-    return true;
+      return true;
+    default:
+      return false;
   }
 });
 
-async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
-  if (message.images.length === 0) {
+async function createZipObjectUrl(images: PageImage[]) {
+  if (images.length === 0) {
     throw new Error("No images selected");
   }
 
   const responses = await Promise.all(
-    message.images.map(
+    images.map(
       async (img) =>
         await fetch(img.src, {
           cache: "force-cache",
@@ -45,7 +48,7 @@ async function createZipObjectUrl(message: CreateZipObjectUrlMessage) {
   );
 
   const names = new Map<string, number>();
-  const files = message.images.map((img, i) => {
+  const files = images.map((img, i) => {
     let name = img.name;
 
     while (names.has(name)) {
